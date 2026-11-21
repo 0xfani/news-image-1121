@@ -1,18 +1,37 @@
-"""Deliver the finished front page of Saturday 21 November 2026.
+"""news-image-20261121 entry: the world on Saturday 21 November 2026.
 
-The page (entry.png, 1024 x 1024) sums up the day's world news: 41 stories from
-6 regions and 8 fields, 13 of them on illustrated cards. It is committed in the
-repository; this program only copies it into the folder the harness reads.
+entry.png is the finished 1024x1024 front page (41 stories, 13 illustrated
+cards, a map of where it happened and 28 numbered briefs). The sandbox runs
+this file with no network; it checks the picture, then writes the very same
+bytes on every run.
 """
-import os
-import shutil
-from pathlib import Path
+import pathlib
+import sys
+from os import environ
 
-here = Path(__file__).resolve().parent
-src = here / "entry.png"
-if not src.is_file():
-    raise SystemExit("entry.png is missing next to main.py")
-dest = Path(os.environ.get("MAKEFUN_OUTPUT_DIR", "/output"))
-dest.mkdir(parents=True, exist_ok=True)
-shutil.copyfile(src, dest / "entry.png")   # byte-for-byte copy: no network, no clock, same bytes every run
-print("wrote", dest / "entry.png", src.stat().st_size, "bytes")
+PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+SIZE_CAP = 1024 * 1024  # the bounty accepts at most 1 MiB
+
+
+def load_page() -> bytes:
+    page = pathlib.Path(__file__).with_name("entry.png").read_bytes()
+    if not page.startswith(PNG_MAGIC):
+        sys.exit("entry.png is not a PNG file")
+    if len(page) > SIZE_CAP:
+        sys.exit(f"entry.png is {len(page)} bytes, over the 1 MiB cap")
+    width = int.from_bytes(page[16:20], "big")  # IHDR: width, then height
+    height = int.from_bytes(page[20:24], "big")
+    if width > 1024 or height > 1024:
+        sys.exit(f"entry.png is {width}x{height}, larger than 1024x1024")
+    return page
+
+
+def deliver() -> None:
+    out_dir = pathlib.Path(environ.get("MAKEFUN_OUTPUT_DIR") or "/output")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    target = out_dir / "entry.png"
+    target.write_bytes(load_page())
+    print(f"saved {target} ({target.stat().st_size} bytes)")
+
+
+deliver()
