@@ -1,8 +1,8 @@
 """news-image-20261121 entry: the world on Saturday 21 November 2026.
 
-entry.png is the finished 1024x1024 front page (39 stories, 13 illustrated
-cards with a place banner each, a map of where it happened and 26 numbered
-briefs). The sandbox runs
+entry.png is the finished 1024x1024 front page (35 stories from all 7
+continents, 13 illustrated cards with a place banner each, a map of where it
+happened and 22 numbered briefs in three columns). The sandbox runs
 this file with no network; it checks the picture, then writes the very same
 bytes on every run.
 """
